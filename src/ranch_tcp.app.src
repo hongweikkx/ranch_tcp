@@ -1,0 +1,12 @@
+{application, ranch_tcp,
+ [
+  {description, "socket tcp acceptor pool"},
+  {vsn, "1.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, {ranch_tcp_app, []}},
+  {env, []}
+ ]}.
