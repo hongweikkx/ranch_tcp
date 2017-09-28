@@ -63,8 +63,8 @@ init([AcceptorNum, LSock]) ->
     register(AccepterName, self()),
     process_flag(trap_exit, true),
     case prim_inet:async_accept(LSock, -1) of
-        {ok, Ref} ->
-            {ok, #state{lsock = LSock, acceptor_name = AccepterName, ref = Ref}};
+        {ok, _Ref} ->
+            {ok, #state{lsock = LSock, acceptor_name = AccepterName}};
         Error ->
             lager:info("create acceptor worker:~p error, the error is :~p~n", [AccepterName, Error]),
             {stop, error}
@@ -182,16 +182,18 @@ do_cast(Info, State) ->
     lager:error("module:~p do_cast msg:~p is undefined.~n", [?MODULE, Info]),
     {noreply, State}.
 
-do_info({inet_async, L, Ref, {ok, S}}, State) when L =:= State#state.lsock andalso Ref =:= State#state.ref ->
+do_info({inet_async, L, _Ref, {ok, S}}, State) when L =:= State#state.lsock  ->
     case start_client(S) of
         ok ->
             case prim_inet:async_accept(L, -1) of
-                {ok, NRef} ->
-                    {noreply, State#state{ref = NRef}};
+                {ok, _NRef} ->
+                    {noreply, State};
                 Error ->
                     lager:error("create acceptor worker:~p error, the error is :~p~n", [State#state.acceptor_name, Error]),
                     {stop, error, State}
             end;
+        {error, max_limit} ->
+            {noreply, State};
         error ->
             {stop, error, State}
     end;
@@ -204,20 +206,20 @@ do_info(_Info, State) ->
     {noreply, State}.
 
 start_client(S) ->
-    case tcp_client_sup:start_child(S) of
-    {ok, Pid} when is_pid(Pid) ->
-        case gen_tcp:controlling_process(S, Pid) of
-        {error, Reason} ->
-            %% 没有将Sock转移出去 应该是发生了不可预知的错误
-            lager:error("#########gen_tcp controllint process is error, the reason is :~p~n", [Reason]),
-            error;
-        ok ->
-            %% Sock 转移了出去
-            %% todo 这里在需要自己再去关闭一下socket么。 会不会都关掉 会
-            %% gen_tcp:close(S)
-            ok
-        end;
-    {error, Error} ->
-        lager:error("###### tcp_client_sup start child error, The Error is:~p~n", [Error]),
-        error
+    case tcp_client_sup:start_client(S) of
+        {ok, Pid} when is_pid(Pid) ->
+            case gen_tcp:controlling_process(S, Pid) of
+                {error, Reason} ->
+                    lager:error("#########gen_tcp controllint process is error, the reason is :~p~n", [Reason]),
+                    {error, Reason};
+                ok ->
+                    ok
+            end;
+        {error, max_limit} ->
+            lager:info("##########tcp_client start child error:~p~n", [max_limit]),
+            {error, max_limit};
+        {error, Error} ->
+            lager:error("###### tcp_client_sup start child error, The Error is:~p~n", [Error]),
+            {error, Error}
     end.
+

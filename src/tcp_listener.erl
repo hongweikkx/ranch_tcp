@@ -2,7 +2,8 @@
 %%% @author hongweigaokkx@163.com
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
-%%%
+%%%      监听进程
+%%%      todo 1. 理论上如果监听进程发生错误，那么tcp_acceptor_sup 进程应该死亡， 但是由于这个进程几乎什么都没有做， 所以先这样
 %%% @end
 %%% Created : 20. 二月 2017 下午10:52
 %%%-------------------------------------------------------------------
@@ -187,9 +188,10 @@ do_info(_Info, State) ->
     {noreply, State}.
 
 tcp_opt() ->
+    Ip = config:get_ranch_tcp_env(host, "127.0.0.1"),
     case config:get_ranch_tcp_env(port) of
         Port when is_integer(Port) ->
-            [{port, Port} | ?TCP_OPT];
+            [{ip, Ip}, {port, Port} | ?TCP_OPT];
         _ ->
-            ?TCP_OPT
+            [{ip, Ip}, ?TCP_OPT]
     end.

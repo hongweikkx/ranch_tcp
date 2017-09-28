@@ -1,3 +1,3 @@
-werl  -boot start_sasl -args_file "./run.args"
+werl  -args_file "./run.args"
 
 exit

@@ -144,6 +144,7 @@ handle_info(_Info, State) ->
     State :: #state{}) -> term()).
 terminate(_Reason, State) ->
     gen_tcp:close(State#state.recv_sock),
+
     ok.
 
 %%--------------------------------------------------------------------

@@ -1,6 +1,4 @@
-
 -module(ranch_tcp_sup).
-
 -behaviour(supervisor).
 
 %% API
@@ -18,6 +16,7 @@
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
 
 %% ===================================================================
 %% Supervisor callbacks

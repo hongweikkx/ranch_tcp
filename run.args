@@ -1,12 +1,9 @@
 ## Name of the app node
--name ranch_tcp@hongwei
+-boot start_sasl
+-name ranch_tcp@kkx
 
 ## Cookie for distributed erlang
 -setcookie ranch_tcp
-
-## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
-## (Disabled by default..use with caution!)
-##-heart
 
 ## Enable kernel poll and a few async threads
 +A  5
@@ -16,6 +13,8 @@
 -smp  auto
 +sub true
 -hidden
+
+## config
 -config "./app.config"
 
 ## Increase number of concurrent ports/sockets
