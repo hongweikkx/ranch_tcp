@@ -84,7 +84,7 @@ handle_call(_Info, _From, State) ->
         do_call(_Info, _From, State)
     catch
         _:Reason  ->
-            lager:error("module:~p do_call info:~p wrong, the reason is:~p~n", [?MODULE, _Info, Reason]),
+            lager:error("module:~p, do_call info:~p wrong, the reason is:~p~n", [?MODULE, _Info, Reason]),
             {reply, error, State}
     end.
 
@@ -127,7 +127,8 @@ handle_info(_Info, State) ->
         do_info(_Info, State)
     catch
         _:Reason  ->
-            lager:error("do_call info:~p wrong, the reason is:~p~n", [?MODULE, _Info, Reason]),
+            lager:error("module:~p do_info:~p wrong, the reason is:~p~n", [?MODULE, _Info, {Reason,
+             erlang:get_stacktrace()}]),
             {noreply, State}
     end.
 
@@ -189,7 +190,7 @@ do_info(_Info, State) ->
 
 tcp_opt() ->
     Ip = config:get_ranch_tcp_env(host, "127.0.0.1"),
-    case config:get_ranch_tcp_env(port) of
+    case config:get_ranch_tcp_env(port, 12345) of
         Port when is_integer(Port) ->
             [{ip, Ip}, {port, Port} | ?TCP_OPT];
         _ ->

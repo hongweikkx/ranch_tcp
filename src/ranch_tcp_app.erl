@@ -10,9 +10,24 @@
 %% ===================================================================
 
 start() ->
-    application:start(lager),
-    lager:start(),
-    application:start(ranch_tcp).
+    start(compiler),
+    start(syntax_tools),
+    start(goldrush),
+    start(lager),
+    erlang:apply(lager, start, []),
+    start(ranch_tcp).
+
+start(App) ->
+    start_ok(App, application:start(App, permanent)).
+start_ok(_App, ok) ->
+    ok;
+start_ok(_App, {error, {already_started, _App}}) ->
+    ok;
+start_ok(App, {error, {not_started, Dep}}) ->
+    ok = start(Dep),
+    start(App);
+start_ok(App, {error, Reason}) ->
+    erlang:error({app_start_failed, App, Reason}).
 
 start(_StartType, _StartArgs) ->
     _ = consider_profiling(),
