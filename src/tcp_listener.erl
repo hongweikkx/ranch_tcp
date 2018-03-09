@@ -187,16 +187,6 @@ do_info(_Info, State) ->
     lager:error("####module:~p do_info msg:~p is undefined.~n", [?MODULE, _Info]),
     {noreply, State}.
 
-<<<<<<< Updated upstream
-tcp_opt() ->
-    Ip = config:get_ranch_tcp_env(host, "127.0.0.1"),
-    case config:get_ranch_tcp_env(port, 12345) of
-        Port when is_integer(Port) ->
-            [{ip, Ip}, {port, Port} | ?TCP_OPT];
-        _ ->
-            [{ip, Ip}, ?TCP_OPT]
-    end.
-=======
 tcp_opt(Opts) ->
     Ip = proplists:get_value(host, Opts, ?DEFAULT_HOST),
     Port = proplists:get_value(port, Opts, ?DEFAULT_PORT),
@@ -204,4 +194,3 @@ tcp_opt(Opts) ->
 
 
 
->>>>>>> Stashed changes
