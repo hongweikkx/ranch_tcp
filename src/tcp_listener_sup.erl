@@ -60,8 +60,7 @@ init([]) ->
     RestartStrategy = {one_for_one, 0, 1},
     Children =
     [
-        ?CHILD(tcp_acceptor_sup, supervisor),
-        ?CHILD(tcp_listener, worker)
+        ?CHILD(tcp_acceptor_sup, supervisor)
     ],
     {ok, {RestartStrategy, Children}}.
 

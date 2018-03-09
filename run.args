@@ -13,7 +13,6 @@
 -smp  auto
 +sub true
 -hidden
-### config
 
 ## Increase number of concurrent ports/sockets
 -env ERL_MAX_PORTS 409600
@@ -31,7 +30,5 @@
 -pa ./deps/lager/ebin
 
 ## Run code at startup.
-##
---config "app.config"
 -s ranch_tcp_app start
 

@@ -25,8 +25,7 @@ start_link() ->
 init([]) ->
     Children =
         [
-            ?CHILD(tcp_listener_sup, supervisor),
-            ?CHILD(tcp_client_sup, supervisor)
+            ?CHILD(tcp_listener_sup, supervisor)
         ],
     RestartStrategy = {one_for_one, 0, 1},
     {ok, {RestartStrategy, Children} }.

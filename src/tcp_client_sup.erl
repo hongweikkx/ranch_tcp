@@ -8,7 +8,7 @@
 %%%       [
 %%%          {tcp_client, {tcp_client, start_link, []}, temporary, TimeOut, worker, [tcp_client]}
 %%%       ]",
-%%%       其中 TimeOut 可以通过  app.config - client_shutdown_timeout 参数配置
+%%%       其中 TimeOut 可以通过 tcpOpts - client_shutdown_timeout 参数配置
 %%% @end
 %%% Created : 20. 二月 2017 下午10:40
 %%%-------------------------------------------------------------------
@@ -16,12 +16,13 @@
 -behavior(gen_server).
 %% API
 -export([
-    start_link/0,
+    start_link/1,
     start_client/1,
     set_client_num_limit/1
 ]).
 %% Supervisor callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+-include("common.hrl").
 
 -define(SERVER, ?MODULE).
 -define(SETS, sets).
@@ -44,11 +45,8 @@
 %%% API functions
 %%%===================================================================
 
-%% done
--spec(start_link() ->
-    {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(TcpOpts) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, TcpOpts, []).
 
 start_client(Sock) ->
     gen_server:call(?SERVER, {start_child, Sock}).
@@ -93,10 +91,10 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-init([]) ->
+init(TcpOpts) ->
     process_flag(trap_exit, true),
-    ClientShutTimeout = config:get_ranch_tcp_env(client_shutdown_timeout, 5000),
-    ChildNumLimit = config:get_ranch_tcp_env(max_connections, 10000),
+    ClientShutTimeout = proplists:get_value(client_shutdown_timeout, TcpOpts, ?DEFAULT_CLIENT_SHUTDOWN_TIMEOUT),
+    ChildNumLimit = proplists:get_value(max_connections, TcpOpts, ?DEFAULT_MAX_CONNECTION),
     Child = #child{mfargs = {tcp_client, start_link, []}, shutdown = ClientShutTimeout},
     {ok, #state{child = Child, child_num = 0, child_num_limit = ChildNumLimit}}.
 

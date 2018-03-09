@@ -3,16 +3,16 @@
 %%% @copyright (C) 2017, <COMPANY>
 %%% @doc
 %%%      监听进程
-%%%      todo 1. 理论上如果监听进程发生错误，那么tcp_acceptor_sup 进程应该死亡， 但是由于这个进程几乎什么都没有做， 所以先这样
+%%%           todo 1. 暴露tcp_opts 的接口给对方。 并且将tcp_listener 后置启动
 %%% @end
 %%% Created : 20. 二月 2017 下午10:52
 %%%-------------------------------------------------------------------
 -module(tcp_listener).
-
 -behaviour(gen_server).
+-include("common.hrl").
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -23,9 +23,9 @@
     code_change/3]).
 
 -define(TCP_OPT,[{ip, any}, inet, {backlog, 5}, {active, false}, {packet, 2}, {keepalive, true}, binary]).
--define(DEFAULT_ACCEPTOR_NUM, 10).
+-include("common.hrl").
 
--record(state, {}).
+-record(state, {opts = []}).
 
 %%%===================================================================
 %%% API
@@ -37,10 +37,8 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(start_link() ->
-    {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
-start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+start_link(Args) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, Args, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -60,8 +58,8 @@ start_link() ->
 -spec(init(Args :: term()) ->
     {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore).
-init([]) ->
-    {ok, #state{}, 0}.
+init(Args) ->
+    {ok, #state{opts = Args}, 0}.
 
 
 %%--------------------------------------------------------------------
@@ -174,10 +172,11 @@ do_cast(_Info, State) ->
     {noreply, State}.
 
 do_info(timeout, State) ->
-    TcpOpt = tcp_opt(),
+    Opts = State#state.opts,
+    TcpOpt = tcp_opt(Opts),
     case gen_tcp:listen(0, TcpOpt) of
         {ok, LSock} ->
-            AccepterSum = config:get_ranch_tcp_env(acceptor_num, ?DEFAULT_ACCEPTOR_NUM),
+            AccepterSum = proplists:get_value(acceptor_num, Opts, ?DEFAULT_ACCEPTOR_NUM),
             [tcp_acceptor_sup:start_child(AcceperNum, LSock) || AcceperNum <- lists:seq(1, AccepterSum)],
             {noreply, State};
         _Error ->
@@ -188,6 +187,7 @@ do_info(_Info, State) ->
     lager:error("####module:~p do_info msg:~p is undefined.~n", [?MODULE, _Info]),
     {noreply, State}.
 
+<<<<<<< Updated upstream
 tcp_opt() ->
     Ip = config:get_ranch_tcp_env(host, "127.0.0.1"),
     case config:get_ranch_tcp_env(port, 12345) of
@@ -196,3 +196,12 @@ tcp_opt() ->
         _ ->
             [{ip, Ip}, ?TCP_OPT]
     end.
+=======
+tcp_opt(Opts) ->
+    Ip = proplists:get_value(host, Opts, ?DEFAULT_HOST),
+    Port = proplists:get_value(port, Opts, ?DEFAULT_PORT),
+    [{ip, Ip}, {port, Port} | ?TCP_OPT].
+
+
+
+>>>>>>> Stashed changes

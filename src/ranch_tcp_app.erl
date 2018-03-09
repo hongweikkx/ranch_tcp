@@ -38,13 +38,8 @@ stop(_State) ->
 
 
 consider_profiling() ->
-    case config:get_ranch_tcp_env(profile) of
-        true ->
-            {ok, _Pid} = eprof:start(),
-            eprof:start_profiling([self()]);
-        _ ->
-            not_profiling
-    end.
+    {ok, _Pid} = eprof:start(),
+    eprof:start_profiling([self()]).
 
 -spec profile_output() -> ok.
 profile_output() ->
